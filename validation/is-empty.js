@@ -1,3 +1,4 @@
+// lodash can handle this, but rolling our own to keep the footprint small
 const isEmpty = value =>
   value === undefined ||
   value === null ||
