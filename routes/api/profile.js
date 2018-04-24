@@ -1,30 +1,34 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const mongoose = require("mongoose");
-const passport = require("passport");
+const mongoose = require('mongoose');
+const passport = require('passport');
 
-//Load models
-const Profile = require("../../models/Profile");
-const User = require("../../models/User");
+// Load validation
+const validateProfileInput = require('../../validation/profile');
+
+// Load models
+const Profile = require('../../models/Profile');
+const User = require('../../models/User');
 
 //@route  GET api/profile/test
 //@desc   Tests profile route
 //@access Public
-router.get("/test", (req, res) => res.json({ msg: "Profile test works" }));
+router.get('/test', (req, res) => res.json({ msg: 'Profile test works' }));
 
 //@route  GET api/profile
 //@desc   Get current users profile
 //@access Private
 router.get(
-  "/",
-  passport.authenticate("jwt", { session: false }),
+  '/',
+  passport.authenticate('jwt', { session: false }),
   (req, res) => {
     const errors = {};
 
     Profile.findOne({ user: req.user.id })
+      .populate('user', ['name', 'avatar'])
       .then(profile => {
         if (!profile) {
-          errors.noprofile = "There is no profile for this user";
+          errors.noprofile = 'There is no profile for this user';
           return res.status(404).json(errors);
         }
         res.json(profile);
@@ -37,9 +41,17 @@ router.get(
 //@desc   Create or Update user profile
 //@access Private
 router.post(
-  "/",
-  passport.authenticate("jwt", { session: false }),
+  '/',
+  passport.authenticate('jwt', { session: false }),
   (req, res) => {
+    // Check Validation
+    const { errors, isValid } = validateProfileInput(req.body);
+
+    if (!isValid) {
+      // Return any errors with 400 status
+      return res.status(400).json(errors);
+    }
+
     // Get fields
     const profileFields = {};
     profileFields.user = req.user.id;
@@ -54,7 +66,7 @@ router.post(
 
     // Skills - split into array
     if (typeof req.body.skills !== undefined) {
-      profileFields.skills = req.body.skills.split(",");
+      profileFields.skills = req.body.skills.split(',');
     }
 
     // Social - is an object so init before adding
@@ -77,7 +89,7 @@ router.post(
         // Create. Check if profile exists
         Profile.findOne({ handle: profileFields.handle }).then(profile => {
           if (profile) {
-            errors.handle = "That handle already exists";
+            errors.handle = 'That handle already exists';
             res.status(400).json(errors);
           }
           // Save profile
