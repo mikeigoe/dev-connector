@@ -1,6 +1,8 @@
 /node_modules
 package-lock.json# See https://help.github.com/ignore-files/ for more about ignoring files.
 
+showcase.jpg
+
 # dependencies
 /node_modules
 
